@@ -11,8 +11,12 @@ This was created due to the complexities of installing Leafcutter on local machi
 ## Installation:
 
 ```
+## in R:
 install.packages("remotes")
 remotes::install_github("jackhump/leafviz")
+
+## on the command line:
+git clone https://github.com/jackhump/leafviz.git
 ``` 
 
 ## Testing:
