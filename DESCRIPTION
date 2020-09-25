@@ -1,11 +1,23 @@
 Package: leafviz
 Type: Package
-Title: What the Package Does (Title Case)
+Title: A standalone version of the Leafcutter Shiny App
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Jack Humphrey, David A. Knowles, Yang Li
+Maintainer: Jack Humphrey <jack.humphrey@mssm.edu>
+Description: see the Leafcutter package for details.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports: 
+    ggrepel,
+    shiny,
+    ggplot2,
+    dplyr,
+    DT,
+    reshape2,
+    gridExtra,
+    intervals,
+    foreach,
+    shinycssloaders,
+    grid,
+    gtable
