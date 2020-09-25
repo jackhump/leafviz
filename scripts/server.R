@@ -2,7 +2,7 @@ library(shiny)
 library(dplyr)
 library(ggplot2)
 library(DT)
-library(leafcutter)
+library(leafviz)
 library(reshape2)
 library(gridExtra)
 library(intervals) # needed for pretty strand arrow placement
