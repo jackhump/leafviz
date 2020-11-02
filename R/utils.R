@@ -1,4 +1,98 @@
 
+#' Filter intron table
+#'
+#' @param introns
+#' @param clu
+#' @param toSave
+#'
+#' @return
+#' @export
+#'
+#' @examples
+filter_intron_table <- function(introns, clu, toSave=FALSE){
+  d <- dplyr::filter(introns, clusterID == clu) %>%
+    dplyr::select( -clusterID, -gene, -ensemblID, -transcripts) %>%
+    arrange( desc(abs(deltapsi)))
+  if( !toSave ){
+    d <- dplyr::rename(d, "ΔPSI" = deltapsi )
+  }else{
+    d <- dplyr::rename(d, "dPSI" = deltapsi ) # fudge as grid arrange doesn't like greek letters
+  }
+  row.names(d) <- letters[1:nrow(d)] # letters is just a:z
+  return(d)
+}
+
+#' Set image size based on gene length
+#'
+#' @param exons_table
+#' @param gene_name
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getGeneLength <- function(exons_table, gene_name){
+  # gets length of gene in nucleotides and decides on a pixel length for the gene plot
+  # RBFOX1 is 1.7Mbp - scale to 5000px
+  # most genes are < 100kb
+  exons <- exons_table[ exons_table$gene_name == gene_name, ]
+  geneStart <- min(exons$start)
+  geneEnd <- max(exons$end)
+  geneLength <- geneEnd - geneStart
+  #print(geneLength)
+  if( geneLength >1E6){
+    pixels <- 5000 # scales RBFOX1 to 5000px
+  }
+  if( geneLength > 5e5 & geneLength < 1e6){
+    pixels <- 3000
+  }
+  if( geneLength > 1.5e5 & geneLength <= 5e5){
+    pixels <- 2000
+  }
+  if( geneLength <= 1.5e5){
+    pixels <- "auto"
+  }
+  #print(pixels)
+  return(pixels)
+}
+
+
+
+#' Create PCA plot
+#'
+#' @param input
+#'
+#' @return
+#' @export
+#'
+#' @import ggplot2
+#'
+#' @examples
+createPCAPlot <- function(input){
+  if( is.null(input$first_PC) ){
+    return(NULL)
+  }else{
+    first_PC <- input$first_PC
+    colour_choice <- input$colour_choice
+    shape_choice <- input$shape_choice
+    #print(first_PC)
+    second_PC <- names(pca[[1]])[ which( names(pca[[1]]) == first_PC) + 1 ]
+    xlab <- paste0( first_PC, " (", pca[[2]][ which(names(pca[[1]]) == first_PC  ) ], "%)"  )
+    ylab <- paste0( second_PC, " (", pca[[2]][ which(names(pca[[1]]) == first_PC ) + 1  ], "%)"  )
+
+    pca_plot <- ggplot( pca[[1]],
+                        aes_string(x = first_PC,
+                                   y = second_PC,
+                                   colour = colour_choice,
+                                   shape = shape_choice) ) + geom_point(size = 60 / nrow(pca[[1]])  ) +
+      xlab( xlab ) +
+      ylab( ylab ) +
+      theme_classic()
+
+    pca_plot
+  }
+}
+
 #' Benjamini-Hochberg FDR correction
 #' @param p P-values
 #' @return Adjusted p-values (q-values)
@@ -40,14 +134,14 @@ multiqq=function(pvalues) {
     df=as.data.frame( qqplot(punif[1:length(pvalues[[i]])], -log10(pvalues[[i]]), plot.it=F) )
     df$group=names(pvalues)[i]
     df
-  } ) 
+  } )
   df$group=factor(df$group, names(pvalues))
-  ggplot(df, aes(x,y,col=group)) + geom_point() + geom_abline(intercept=0,slope=1) + theme_bw(base_size=18) + xlab("Expected -log10(p)") + ylab("Observed -log10(p)") 
+  ggplot(df, aes(x,y,col=group)) + geom_point() + geom_abline(intercept=0,slope=1) + theme_bw(base_size=18) + xlab("Expected -log10(p)") + ylab("Observed -log10(p)")
 }
 
 #' Make a data.frame of meta data about the introns
 #' @param introns Names of the introns
-#' @return Data.frame with chr, start, end, cluster id and "middle" 
+#' @return Data.frame with chr, start, end, cluster id and "middle"
 #' @export
 get_intron_meta=function(introns){
   intron_meta=do.call(rbind,strsplit(introns,":"))
@@ -55,7 +149,7 @@ get_intron_meta=function(introns){
   intron_meta=as.data.frame(intron_meta,stringsAsFactors = F)
   intron_meta$start=as.numeric(intron_meta$start)
   intron_meta$end=as.numeric(intron_meta$end)
-  intron_meta$middle=.5*(intron_meta$start+intron_meta$end) # TODO: can remove this now? 
+  intron_meta$middle=.5*(intron_meta$start+intron_meta$end) # TODO: can remove this now?
   intron_meta
 }
 
@@ -74,7 +168,7 @@ sanitize_simplex=function(x, eps=1e-6) {
 }
 
 
-#' Work out which gene each cluster belongs to. Note the chromosome names used in the two inputs must match. 
+#' Work out which gene each cluster belongs to. Note the chromosome names used in the two inputs must match.
 #' @param intron_meta Data frame describing the introns, usually from get_intron_meta
 #' @param exons_table Table of exons, see e.g. /data/gencode19_exons.txt.gz
 #' @return Data.frame with cluster ids and genes separated by commas
@@ -82,7 +176,7 @@ sanitize_simplex=function(x, eps=1e-6) {
 #' @export
 map_clusters_to_genes=function(intron_meta, exons_table) {
     gene_df=foreach (chr=sort(unique(intron_meta$chr)), .combine=rbind) %dopar% {
-    
+
         intron_chr=intron_meta[ intron_meta$chr==chr, ]
         exons_chr=exons_table[exons_table$chr==chr, ]
 
@@ -97,14 +191,14 @@ map_clusters_to_genes=function(intron_meta, exons_table) {
         all_matches=rbind(three_prime_matches, five_prime_matches)[ , c("clu", "gene_name")]
 
         all_matches=all_matches[!duplicated(all_matches),]
-        
+
         if (nrow(all_matches)==0) return(NULL)
         all_matches$clu=paste(chr,all_matches$clu,sep=':')
         all_matches
     }
 
     clu_df=gene_df %>% group_by(clu) %>% summarize(genes=paste(gene_name, collapse = ","))
-    
+
     class(clu_df)="data.frame"
 
     clu_df

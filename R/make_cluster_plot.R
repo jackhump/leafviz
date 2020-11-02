@@ -3,8 +3,8 @@
 #'
 #' @import ggplot2
 #' @importFrom gridExtra grid.arrange
-#' @import intervals
 #' @export
+#' @importFrom magrittr "%>%"
 make_cluster_plot <- function(
   cluster_to_plot,
   main_title = NA,
@@ -18,6 +18,8 @@ make_cluster_plot <- function(
   if( is.null(cluster_to_plot)){
     print("no cluster selected!")
   }
+
+  `%do%` <- foreach::`%do%`
   #for testing!
   #cluster_to_plot <- "clu_8845"
   #cluster_to_plot <- "clu_36585"
@@ -62,16 +64,16 @@ make_cluster_plot <- function(
 
   #print(intron_meta)
 
-  new_theme_empty <- theme_bw(base_size = 15 )
-  new_theme_empty$panel.background = element_rect(fill="white", colour = "white")
-  new_theme_empty$line <- element_blank()
-  new_theme_empty$rect <- element_blank()
-  new_theme_empty$strip.text <- element_blank()
-  new_theme_empty$axis.text <- element_blank()
+  new_theme_empty <- ggplot2::theme_bw(base_size = 15 )
+  new_theme_empty$panel.background = ggplot2::element_rect(fill="white", colour = "white")
+  new_theme_empty$line <- ggplot2::element_blank()
+  new_theme_empty$rect <- ggplot2::element_blank()
+  new_theme_empty$strip.text <- ggplot2::element_blank()
+  new_theme_empty$axis.text <- ggplot2::element_blank()
 
   groups=sort(unique(x))
 
-  max_log=.5*ceiling(2*log10( 1+max( unlist( foreach (tis=groups) %do% { intron_meta$counts=summary_func(y[ tis==x,,drop=F]) } ) ) ))
+  max_log=.5*ceiling(2*log10( 1+max( unlist( foreach::foreach (tis=groups) %do% { intron_meta$counts=summary_func(y[ tis==x,,drop=F]) } ) ) ))
 
   breaks=if (max_log <= 2.5) seq(0,max_log,by=0.5) else seq(0,ceiling(max_log),by=1)
   limits=c(0.0,max_log)
@@ -119,7 +121,7 @@ make_cluster_plot <- function(
   # sweep is dividing each entry in each row by the sum of all entries in that row and then apply is finding the mean value of each column
   summary_func=function(a) apply( sweep(a,1,rowSums(a),"/"),2, function(g) mean(g, na.rm=T) )
 
-  plots <- foreach (tis=groups) %do% {
+  plots <- foreach::foreach (tis=groups) %do% {
     # print(y[tiss=x,,drop=F])
     intron_meta$counts=summary_func(y[ tis==x,,drop=F])
     #print(length(intron_meta$counts))
@@ -139,7 +141,7 @@ make_cluster_plot <- function(
     #print(intron_meta$counts)
 
     # for each junction
-    allEdges=do.call(rbind,foreach (i=1:nrow(intron_meta)) %do% {
+    allEdges=do.call(rbind,foreach::foreach (i=1:nrow(intron_meta)) %do% {
       #allEdges=do.call(rbind,foreach (i=1:2) %do% {
       if (i%%2==1) return(NULL)  # only care about the even numbered junctions?
       #if (intron_meta$counts[i]==0) return(NULL)
@@ -174,7 +176,7 @@ make_cluster_plot <- function(
       edge
     })
 
-    allEdgesP=do.call(rbind,foreach (i=1:nrow(intron_meta)) %do% {
+    allEdgesP=do.call(rbind,foreach::foreach (i=1:nrow(intron_meta)) %do% {
       if (i%%2==0) return(NULL)  # just the odd numbered junctions
       #if (intron_meta$counts[i]==0) return(NULL)
       start=coords[ as.character(intron_meta$start[i]) ]
@@ -207,7 +209,7 @@ make_cluster_plot <- function(
     })
 
     if ( all(is.na(main_title)) | !first_plot){
-      new_theme_empty$plot.title <- element_blank()
+      new_theme_empty$plot.title <- ggplot2::element_blank()
     }
     first_plot <- FALSE
 
@@ -227,39 +229,39 @@ make_cluster_plot <- function(
     #allEdgesP <- allEdgesP[ allEdgesP$label != 0, ]
     #allEdges <- allEdges[ allEdges$label != 0, ]
     # junction_colour if annotated? a different colour if not
-    g <- ggplot() +
-      geom_curve(data=allEdgesP, aes(x = start, xend = xtext, y = yOffset, yend = ytext, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
+    g <- ggplot2::ggplot() +
+      ggplot2::geom_curve(data=allEdgesP, ggplot2::aes(x = start, xend = xtext, y = yOffset, yend = ytext, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
                  angle=90, curvature=-curv,lineend="round") +
-      geom_curve(data=allEdgesP, aes(x = xtext, xend = end, y = ytext, yend = yOffset, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
+      ggplot2::geom_curve(data=allEdgesP, ggplot2::aes(x = xtext, xend = end, y = ytext, yend = yOffset, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
                  angle=90, curvature=-curv,lineend="round") +
-      geom_curve(data=allEdges, aes(x = start, xend = xtext, y = -yOffset, yend = ytext, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
+      ggplot2::geom_curve(data=allEdges, ggplot2::aes(x = start, xend = xtext, y = -yOffset, yend = ytext, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
                  angle=90,curvature=curv,lineend="round") +
-      geom_curve(data=allEdges, aes(x = xtext, xend = end, y = ytext, yend = -yOffset, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
+      ggplot2::geom_curve(data=allEdges, ggplot2::aes(x = xtext, xend = end, y = ytext, yend = -yOffset, group = Group, colour = verdict, size = curveMax * (log10counts - 1)^curveExponent ),
                  angle=90,curvature=curv,lineend="round") +
 
     new_theme_empty +
       # make the y axis label the group
-      ylab(paste0(groups[fancyVar]," (n=",group_sample_size,")")) +
-      xlab("") +
-      xlim(my_xlim) +
+      ggplot2::ylab(paste0(groups[fancyVar]," (n=",group_sample_size,")")) +
+      ggplot2::xlab("") +
+      ggplot2::xlim(my_xlim) +
       # try titling instead - why doesn't this work?
-      ggtitle(paste0(groups[fancyVar]," (n=",group_sample_size,")" ) ) +
+      ggplot2::ggtitle(paste0(groups[fancyVar]," (n=",group_sample_size,")" ) ) +
 
       # horizontal line - smooth out the ends of the curves
-      geom_hline(yintercept=0, size = centreLineWidth, colour = "white") +
-      geom_hline(yintercept=0,alpha=.9, size=1) +
+      ggplot2::geom_hline(yintercept=0, size = centreLineWidth, colour = "white") +
+      ggplot2::geom_hline(yintercept=0,alpha=.9, size=1) +
 
       # label the junctions
-      geom_label(data=allEdgesP,aes(x=xtext,y=0.95*ytext,label=label), size = labelTextSize, label.size = NA, parse=TRUE, fill = "white",colour = "black", label.r = unit(0.3,"lines"), label.padding = unit(0.3,"lines") ) +
-      geom_label(data=allEdges,aes(x=xtext,y=0.95*ytext,label=label), size= labelTextSize, label.size = NA, parse=TRUE, fill = "white", colour = "black", label.r = unit(0.3,"lines"), label.padding = unit(0.3,"lines") ) +
+      ggplot2::geom_label(data=allEdgesP,ggplot2::aes(x=xtext,y=0.95*ytext,label=label), size = labelTextSize, label.size = NA, parse=TRUE, fill = "white",colour = "black", label.r = unit(0.3,"lines"), label.padding = unit(0.3,"lines") ) +
+      ggplot2::geom_label(data=allEdges,ggplot2::aes(x=xtext,y=0.95*ytext,label=label), size= labelTextSize, label.size = NA, parse=TRUE, fill = "white", colour = "black", label.r = unit(0.3,"lines"), label.padding = unit(0.3,"lines") ) +
       #
-      ylim(YLIMN,YLIMP) +
-      scale_size_continuous(limits=c(0,10),guide='none')
+      ggplot2::ylim(YLIMN,YLIMP) +
+      ggplot2::scale_size_continuous(limits=c(0,10),guide='none')
     # is this used for anything? color is currently set to clu which doesn't change for each junction
 
     if (!is.na(snp_coord)) {
       df=data.frame(x=snp_coord,xend=snp_coord,y=0,yend=max_height*1.1)
-      g <- g + geom_segment(data=df,aes(x=x,y=y,xend=xend,yend=yend)) #+geom_vline(xintercept=snp_coord)
+      g <- g + ggplot2::geom_segment(data=df,ggplot2::aes(x=x,y=y,xend=xend,yend=yend)) #+geom_vline(xintercept=snp_coord)
     }
     plots[[fancyVar]] <- g  # return the plot
   }
@@ -269,7 +271,7 @@ make_cluster_plot <- function(
   df <- data.frame(x=coords, xend=total_length*(s-min(s))/(max(s)-min(s)), y=0, yend=min_height)
   # Control segment between diagram to exon
   # if (! is.null( exons_table) ){
-  # plots[[length(plots)]] <- plots[[length(plots)]] + geom_segment(data=df, aes(x=x,y=y,xend=xend,yend=yend),alpha=0.2, lty=2)
+  # plots[[length(plots)]] <- plots[[length(plots)]] + geom_segment(data=df, ggplot2::aes(x=x,y=y,xend=xend,yend=yend),alpha=0.2, lty=2)
   # }
 
   # ADDING EXON ANNOTATION
@@ -347,7 +349,7 @@ make_cluster_plot <- function(
         gene_strand <- NULL
       }else{
         # assign strand arrows based on lengths of intron
-        exon_intervals <- Intervals( matrix(data = c(exon_df$x, exon_df$xend), ncol = 2) )
+        exon_intervals <- intervals::Intervals( matrix(data = c(exon_df$x, exon_df$xend), ncol = 2) )
         #exon_intervals <- intervals::interval_union( exon_intervals )
         intron_intervals <- intervals::interval_complement( exon_intervals )
         intron_intervals <- intron_intervals[ 2:(nrow(intron_intervals)-1),]
@@ -383,8 +385,8 @@ make_cluster_plot <- function(
         # add strand arrows to plot
         for (i in 1:length(plots) ){
           plots[[i]] <- plots[[i]] +
-            geom_line( data = strand_df,
-                       aes( x = x, y = y, group = group ), colour = "black", size=1,
+            ggplot2::geom_line( data = strand_df,
+                       ggplot2::aes( x = x, y = y, group = group ), colour = "black", size=1,
                        arrow = arrow(ends = strand_pos, type = "open", angle = 30, length = unit(0.1, units = "inches" )))
         }
       }
@@ -392,9 +394,9 @@ make_cluster_plot <- function(
       # add exons to plots
       for (i in 1:length(plots) ){
         plots[[i]] <- plots[[i]] +
-          geom_segment( data=exon_df, aes(x=x,y=y,xend=xend,yend=yend, colour = label), alpha=1, size=6) +
-          geom_segment( data = exon_df, aes(x = x, xend = x+0.01, y = y, yend = yend), colour = "white", size = 6, alpha = 1) +
-          geom_segment( data = exon_df, aes(x = xend-0.01, xend=xend, y = y, yend = yend), colour = "white", size = 6, alpha = 1)
+          ggplot2::geom_segment( data=exon_df, ggplot2::aes(x=x,y=y,xend=xend,yend=yend, colour = label), alpha=1, size=6) +
+          ggplot2::geom_segment( data = exon_df, ggplot2::aes(x = x, xend = x+0.01, y = y, yend = yend), colour = "white", size = 6, alpha = 1) +
+          ggplot2::geom_segment( data = exon_df, ggplot2::aes(x = xend-0.01, xend=xend, y = y, yend = yend), colour = "white", size = 6, alpha = 1)
       }
     }
   }
@@ -404,19 +406,22 @@ make_cluster_plot <- function(
   # give a main_title argument, ideally a vector of c(gene_name, cluster_name)
   if( all( !is.na(main_title) ) ){
     if( length(main_title) > 1){
-      plots[[1]] <- plots[[1]] + ggtitle(main_title[1],subtitle = main_title[2]) +
-      theme(plot.title = element_text(face="bold.italic", colour="black", size = 15, hjust = 0.45), # centre titles - account for xlabels
-          plot.subtitle = element_text(hjust = 0.45))
+      plots[[1]] <- plots[[1]] +
+        ggplot2::ggtitle(main_title[1],subtitle = main_title[2]) +
+        ggplot2::theme(plot.title = ggplot2::element_text(face="bold.italic", colour="black", size = 15, hjust = 0.45), # centre titles - account for xlabels
+          plot.subtitle = ggplot2::element_text(hjust = 0.45))
     }else{
-    plots[[1]] = plots[[1]] + ggtitle(main_title)
+    plots[[1]] = plots[[1]] + ggplot2::ggtitle(main_title)
     }
   }
 
   # add colour palette - different depending on whether exons are included or not - hide in top plot
   plots[[1]] <- plots[[1]] +
-    scale_colour_manual("", values = mainPalette ) + guides(colour=FALSE) # don't show colour legend in top plot
+    ggplot2::scale_colour_manual("", values = mainPalette ) +
+    ggplot2::guides(colour=FALSE) # don't show colour legend in top plot
   plots[[2]] <- plots[[2]] +
-    scale_colour_manual("", values = mainPalette ) + theme(legend.position="bottom", legend.justification = 'right')
+    ggplot2::scale_colour_manual("", values = mainPalette ) +
+    ggplot2::theme(legend.position="bottom", legend.justification = 'right')
 
   # ARRANGE PLOTS
 

@@ -3,37 +3,12 @@
 #'
 #' Take a gene name or ID, search the counts matrix for all clusters that fall within that gene's boundaries (found from the exon table).
 #' @import ggplot2
+#' @import ggrepel
 #' @export
-
-# #
-# gene_name <- "ADIPOR2"
-# clusterID <- NULL
-# min_exon_length <- 0.5
-# cluster_list <- clusters
-# # for testing - create interval plot of a given dataframe
-# int <- function(data, print_length = NULL){
-#   if("start" %in% names(data) ){
-#     intMatrix <- matrix(data = c(data$start, data$end), ncol = 2 )
-#     if( !is.null(print_length)){
-#       row.names(intMatrix) <- data$end - data$start
-#     }
-#   }else{
-#     intMatrix <- matrix(data = c(data$x, data$xend), ncol = 2 )
-#     if( !is.null(print_length)){
-#       row.names(intMatrix) <- data$xend - data$x
-#     }
-#   }
-#   if( !is.null(print_length)){
-#     plot(Intervals(intMatrix), use_points = FALSE, lwd = 2.0, use_names = TRUE)
-#     print(intMatrix)
-#   }else{
-#     plot(Intervals(intMatrix), use_points = FALSE, lwd = 2.0)
-#
-#   }
-#   return( intMatrix )
-# }
-
-
+#'
+#'
+#'
+#' @importFrom magrittr "%>%"
 make_gene_plot <- function(gene_name,
                            clusterID=NULL,
                            cluster_list=NULL,
@@ -50,6 +25,7 @@ make_gene_plot <- function(gene_name,
                            legend_title="Mean counts",
                            debug=F){
 
+  `%do%` <- foreach::`%do%`
   exonMax <- 1000
 
   stopifnot( !is.null(exons_table) )
@@ -230,11 +206,11 @@ make_gene_plot <- function(gene_name,
 
   # CREATE NEW THEME FOR PLOT
 
-  new_theme_empty <- theme_bw(base_size = 15)
-  new_theme_empty$line <- element_blank()
-  new_theme_empty$rect <- element_blank()
-  new_theme_empty$strip.text <- element_blank()
-  new_theme_empty$axis.text <- element_blank()
+  new_theme_empty <- ggplot2::theme_bw(base_size = 15)
+  new_theme_empty$line <- ggplot2::element_blank()
+  new_theme_empty$rect <- ggplot2::element_blank()
+  new_theme_empty$strip.text <- ggplot2::element_blank()
+  new_theme_empty$axis.text <- ggplot2::element_blank()
 
 
   # HARD CODED PLOT SETTINGS
@@ -266,7 +242,7 @@ make_gene_plot <- function(gene_name,
 
   # SCALE ODD JUNCTIONS
 
-  allEdges=do.call(rbind,foreach (i=1:nrow(all_junctions)) %do% {
+  allEdges=do.call(rbind,foreach::foreach (i=1:nrow(all_junctions)) %do% {
     #allEdges=do.call(rbind,foreach (i=1:2) %do% {
     if (i%%2==1) return(NULL)  # only care about the even numbered junctions?
     #if (intron_meta$counts[i]==0) return(NULL)
@@ -302,7 +278,7 @@ make_gene_plot <- function(gene_name,
 
   # SCALE EVEN JUNCTIONS
 
-  allEdgesP=do.call(rbind,foreach (i=1:nrow(all_junctions)) %do% {
+  allEdgesP=do.call(rbind,foreach::foreach (i=1:nrow(all_junctions)) %do% {
     if (i%%2==0) return(NULL)  # just the odd numbered junctions
     #if (intron_meta$counts[i]==0) return(NULL)
     start=coords[ as.character(all_junctions$start[i]) ]
@@ -403,14 +379,14 @@ make_gene_plot <- function(gene_name,
         # take first exon
         strand_df <- strand_df[ 1, ]
         # melt down into coordinates linked by id - the same exon
-        strand_df <- melt( strand_df[, c("x","xend", "id")], "id")
+        strand_df <- reshape2::melt( strand_df[, c("x","xend", "id")], "id")
 
       }
       if( gene_strand == "-" ){
         strand_pos <- "first"
         strand_df <- strand_df[ nrow(strand_df), ]
         # melt down into coordinates linked by id - the same exon
-        strand_df <- melt( strand_df[, c("x","xend", "id")], "id")
+        strand_df <- reshape2::melt( strand_df[, c("x","xend", "id")], "id")
 
       }
     }else{
@@ -418,7 +394,7 @@ make_gene_plot <- function(gene_name,
     }
 
     # use intervals package to compute the correct placement of stranding arrows
-    exon_intervals <- Intervals( matrix(data = c(exon_df$x, exon_df$xend), ncol = 2) )
+    exon_intervals <- intervals::Intervals( matrix(data = c(exon_df$x, exon_df$xend), ncol = 2) )
     #exon_intervals <- intervals::interval_union( exon_intervals )
     intron_intervals <- intervals::interval_complement( exon_intervals )
     intron_intervals <- intron_intervals[ 2:(nrow(intron_intervals)-1),]
@@ -476,7 +452,7 @@ make_gene_plot <- function(gene_name,
     #print(exon_df)
 
 
-    plots <- ggplot()
+    plots <- ggplot2::ggplot()
 
       # cluster junctions - if FDR is available then colour
       if( !is.null(cluster_list)){
@@ -485,8 +461,8 @@ make_gene_plot <- function(gene_name,
         allEdgesP_significant = allEdgesP %>% dplyr::filter(FDR != ".")
 
         if (nrow(allEdgesP_significant) > 0)
-          plots <- plots + geom_curve(data=allEdgesP_significant,
-                                      aes(x = start,
+          plots <- plots + ggplot2::geom_curve(data=allEdgesP_significant,
+                                      ggplot2::aes(x = start,
                                           xend = end,
                                           y = 0,
                                           yend = 0,
@@ -501,8 +477,8 @@ make_gene_plot <- function(gene_name,
         allEdges_significant = allEdges %>% dplyr::filter(FDR != ".")
 
         if (nrow(allEdges_significant) > 0)
-          plots <- plots + geom_curve(data=allEdges_significant,
-                                      aes(x = start,
+          plots <- plots + ggplot2::geom_curve(data=allEdges_significant,
+                                      ggplot2::aes(x = start,
                                           xend = end,
                                           y = 0,
                                           yend = 0,
@@ -517,31 +493,31 @@ make_gene_plot <- function(gene_name,
         if( nrow(  allEdgesP_nonsignificant ) > 0  ){
           # if there are non-significant clusters, then colour  grey
           plots <- plots +
-            geom_curve(data=allEdgesP_nonsignificant, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax ),
+            ggplot2::geom_curve(data=allEdgesP_nonsignificant, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax ),
                        curvature=curv,lineend="round", colour = "gray" )
         }
 
         allEdges_nonsignificant = allEdges %>% dplyr::filter(FDR == ".")
         if( nrow(  allEdges_nonsignificant ) > 0  ){
           plots <- plots +
-            geom_curve(data=allEdges_nonsignificant,
-                       aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax),
+            ggplot2::geom_curve(data=allEdges_nonsignificant,
+                       ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax),
                        curvature=-curv,lineend="round",  colour = "gray" )
         }
       }else{
         if( is.null(clusterID)){
-          plots <- plots + geom_curve(data=allEdgesP, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax ),
+          plots <- plots + ggplot2::geom_curve(data=allEdgesP, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax ),
                                     curvature=curv,lineend="round", colour = junction_colour ) +
-          geom_curve(data=allEdges, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax),
+            ggplot2::geom_curve(data=allEdges, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=clu, size = curveMax),
                      curvature=-curv,lineend="round",  colour = junction_colour )
         }else{
           # colour only the selected cluster
-          plots <- plots + geom_curve(data=allEdgesP, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=factor(clu == clusterID ), size = curveMax ),
+          plots <- plots + ggplot2::geom_curve(data=allEdgesP, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=factor(clu == clusterID ), size = curveMax ),
                                       curvature=curv,lineend="round") +
-            geom_curve(data=allEdges, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=factor(clu == clusterID), size = curveMax),
+            ggplot2::geom_curve(data=allEdges, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=factor(clu == clusterID), size = curveMax),
                        curvature=-curv,lineend="round" ) +
-            scale_colour_manual("", breaks = c(TRUE, FALSE), limits = c(TRUE, FALSE), values = c("firebrick2", "gray") ) +
-            guides(colour=FALSE)
+            ggplot2::scale_colour_manual("", breaks = c(TRUE, FALSE), limits = c(TRUE, FALSE), values = c("firebrick2", "gray") ) +
+            ggplot2::guides(colour=FALSE)
 
         }
       }
@@ -552,12 +528,12 @@ make_gene_plot <- function(gene_name,
 
       if( !is.null(introns) & !is.null(cluster_list)){
         plots <- plots +
-          geom_curve(data=allEdgesP_significant, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=as.factor(deltaPSI > 0) , size = curveMax ),
+          ggplot2::geom_curve(data=allEdgesP_significant, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=as.factor(deltaPSI > 0) , size = curveMax ),
                      curvature=curv,lineend="round") +
-          geom_curve(data=allEdges_significant, aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=as.factor(deltaPSI > 0), size = curveMax),
+          ggplot2::geom_curve(data=allEdges_significant, ggplot2::aes(x = start, xend = end, y = 0, yend = 0, group = Group, color=as.factor(deltaPSI > 0), size = curveMax),
                      curvature=-curv,lineend="round" ) +
           #scale_colour_discrete("dPSI",labels = c("down","up") )
-          scale_colour_manual("dPSI",labels = c("down","up"), values = c("darkturquoise", "firebrick2") )
+          ggplot2::scale_colour_manual("dPSI",labels = c("down","up"), values = c("darkturquoise", "firebrick2") )
       }
 
 
@@ -566,31 +542,31 @@ make_gene_plot <- function(gene_name,
       new_theme_empty +
       # make the y axis label the group
       #ylab(paste0(tis," (n=",group_sample_size,")")) +
-      xlab("") +
-      ylab("") +
+      ggplot2::xlab("") +
+      ggplot2::ylab("") +
       #xlim(my_xlim) +
       # try titling instead - why doesn't this work?
       #ggtitle(paste0(tis," (n=",group_sample_size,")" ) ) +
 
       # horizontal line - smooth out the ends of the curves
-      geom_hline(yintercept=0, size = centreLineWidth, colour = "white") +
-      geom_hline(yintercept=0,alpha=.9, size=1) +
+      ggplot2::geom_hline(yintercept=0, size = centreLineWidth, colour = "white") +
+      ggplot2::geom_hline(yintercept=0,alpha=.9, size=1) +
 
       # label the junctions
-      #geom_label(data=allEdgesP,aes(x=xtext,y=ytext,label=label), size = 5, label.size = 0 ) +
-      #geom_label(data=allEdges,aes(x=xtext,y=ytext,label=label), size= 5, label.size = 0 ) +
+      #geom_label(data=allEdgesP,ggplot2::aes(x=xtext,y=ytext,label=label), size = 5, label.size = 0 ) +
+      #geom_label(data=allEdges,ggplot2::aes(x=xtext,y=ytext,label=label), size= 5, label.size = 0 ) +
 
-      ylim(YLIMN,YLIMP) +
+      ggplot2::ylim(YLIMN,YLIMP) +
 
-      scale_size_continuous(limits=c(0,10),guide='none') +
+      ggplot2::scale_size_continuous(limits=c(0,10),guide='none') +
 
-      ggtitle( paste(gene_name_df$label, collapse = "+") ) +
-      theme(plot.title = element_text(face="bold.italic", colour="black", size = 20) ) +
+      ggplot2::ggtitle( paste(gene_name_df$label, collapse = "+") ) +
+      ggplot2::theme(plot.title = ggplot2::element_text(face="bold.italic", colour="black", size = 20) ) +
       # EXONS
-      geom_segment( data=exon_df, aes(x=x,y=y,xend=xend,yend=yend ), alpha=1, size=6, colour = 'black' )
+      ggplot2::geom_segment( data=exon_df, ggplot2::aes(x=x,y=y,xend=xend,yend=yend ), alpha=1, size=6, colour = 'black' )
 
-      #geom_segment( data = df, aes(x = x - 0.05, xend = x, y = y, yend = yend), colour = "white", size = 6, alpha = 1) +
-      #geom_segment( data = df, aes(x = xend, xend=xend + 0.05, y = y, yend = yend), colour = "white", size = 6, alpha = 1)
+      #geom_segment( data = df, ggplot2::aes(x = x - 0.05, xend = x, y = y, yend = yend), colour = "white", size = 6, alpha = 1) +
+      #geom_segment( data = df, ggplot2::aes(x = xend, xend=xend + 0.05, y = y, yend = yend), colour = "white", size = 6, alpha = 1)
 
 
 
@@ -599,8 +575,8 @@ make_gene_plot <- function(gene_name,
     #print(strand_df)
     if( !is.null(strand_pos)){
         plots <- plots +
-          geom_line( data = strand_df,
-                     aes( x = x, y = y, group = group ),
+        ggplot2::geom_line( data = strand_df,
+                     ggplot2::aes( x = x, y = y, group = group ),
                      colour = "black", size=1,
                      arrow = arrow(ends = strand_pos, type = "open", angle = 30, length = unit(0.1, units = "inches" ) )
                      )
@@ -609,14 +585,14 @@ make_gene_plot <- function(gene_name,
 
     plots <- plots +
       # # JUNCTIONS
-      # geom_segment( data = allEdgesP, aes(x = end, xend=end + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
-      # geom_segment( data = allEdges, aes(x = end, xend=end + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
-      # geom_segment( data = allEdgesP, aes(x = start, xend=start - 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
-      # geom_segment( data = allEdges, aes(x = start, xend=start - 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
+      # geom_segment( data = allEdgesP, ggplot2::aes(x = end, xend=end + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
+      # geom_segment( data = allEdges, ggplot2::aes(x = end, xend=end + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
+      # geom_segment( data = allEdgesP, ggplot2::aes(x = start, xend=start - 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
+      # geom_segment( data = allEdges, ggplot2::aes(x = start, xend=start - 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
 
       # EXON DEMARCATION
-      geom_segment( data = exon_df, aes(x = xend, xend=xend + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
-      geom_segment( data = exon_df, aes(x = x, xend=x - 0.05, y = 0, yend = 0), colour = "white", size = 6 )
+      ggplot2::geom_segment( data = exon_df, ggplot2::aes(x = xend, xend=xend + 0.05, y = 0, yend = 0), colour = "white", size = 6 ) +
+      ggplot2::geom_segment( data = exon_df, ggplot2::aes(x = x, xend=x - 0.05, y = 0, yend = 0), colour = "white", size = 6 )
 
 
     if( !is.null(cluster_list)){
@@ -637,20 +613,20 @@ make_gene_plot <- function(gene_name,
 
       plots <- plots +
         # add dotted lines to indicate the regions that belong to each cluster
-        geom_segment( data = label_df, aes( x = start, xend = middle, y = 0, yend = labelY ), colour = "gray", linetype = 3) +
-        geom_segment( data = label_df, aes( x = end, xend = middle, y = 0, yend = labelY ), colour = "gray", linetype = 3) +
+        ggplot2::geom_segment( data = label_df, ggplot2::aes( x = start, xend = middle, y = 0, yend = labelY ), colour = "gray", linetype = 3) +
+        ggplot2::geom_segment( data = label_df, ggplot2::aes( x = end, xend = middle, y = 0, yend = labelY ), colour = "gray", linetype = 3) +
         # give each cluster a white circle behind
-        geom_point( data = label_df, aes( x = middle, y = labelY), colour = "white", size = 22)
+        ggplot2::geom_point( data = label_df, ggplot2::aes( x = middle, y = labelY), colour = "white", size = 22)
 
       # if a particular cluster is selected then give a border
       if( !is.null(clusterID) ){
         plots <- plots +
-          geom_text_repel( data = label_df[ label_df$clu != clusterID,], aes( x = middle, y = labelY, label = label ), point.padding = NA, direction = "y", segment.alpha = 0 ) +
-          geom_label( data = label_df[ label_df$clu == clusterID,],
-                      aes( x = middle, y = labelY, label = label ), fontface = "bold",
+          ggrepel::geom_text_repel( data = label_df[ label_df$clu != clusterID,], ggplot2::aes( x = middle, y = labelY, label = label ), point.padding = NA, direction = "y", segment.alpha = 0 ) +
+          ggplot2::geom_label( data = label_df[ label_df$clu == clusterID,],
+                      ggplot2::aes( x = middle, y = labelY, label = label ), fontface = "bold",
                       label.size = 0.5, label.r = unit(0.3,"lines"), label.padding = unit(0.3,"lines") )
       }else{
-        plots <- plots + geom_text_repel( data = label_df, aes( x = middle, y = labelY, label = label ), point.padding = NA, direction = "y", segment.alpha = 0 )
+        plots <- plots + ggrepel::geom_text_repel( data = label_df, ggplot2::aes( x = middle, y = labelY, label = label ), point.padding = NA, direction = "y", segment.alpha = 0 )
       }
 
     }
@@ -658,9 +634,9 @@ make_gene_plot <- function(gene_name,
     # ADD SNP POSITION
     if(!is.na(snp_pos)){
       plots <- plots +
-        geom_segment(data=SNP_df,aes(x=x,y=y,xend=xend,yend=yend),colour = "goldenrod", size = 6.5 ) +
-        geom_text( data = SNP_df, aes(x =x, y = 0.5*YLIMP, label = label)) +
-        geom_segment( data = SNP_df, aes( x = x, xend = x, y = 0, yend = 0.45*YLIMP ), colour = "gray", linetype = 3)
+        ggplot2::geom_segment(data=SNP_df,ggplot2::aes(x=x,y=y,xend=xend,yend=yend),colour = "goldenrod", size = 6.5 ) +
+        ggplot2::geom_text( data = SNP_df, ggplot2::aes(x =x, y = 0.5*YLIMP, label = label)) +
+        ggplot2::geom_segment( data = SNP_df, ggplot2::aes( x = x, xend = x, y = 0, yend = 0.45*YLIMP ), colour = "gray", linetype = 3)
     }
 
 

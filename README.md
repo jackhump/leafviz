@@ -14,16 +14,14 @@ This was created due to the complexities of installing Leafcutter on local machi
 ## in R:
 install.packages("remotes")
 remotes::install_github("jackhump/leafviz")
-
-## on the command line:
-git clone https://github.com/jackhump/leafviz.git
 ``` 
 
-## Testing:
+## Running app on example dataset:
 
 ```
-cd leafviz/scripts
-./run_leafviz.R
+in R:
+library(leafviz)
+leafviz()
 ```
 
 ## Running leafviz on your own dataset:
@@ -31,6 +29,6 @@ cd leafviz/scripts
 This assumes you've prepared your differential splicing results for leafviz using the prepare_results.R script within Leafcutter.
 
 ```
-cd leafviz/scripts
-./run_leafviz.R <path/to/your_leafcutter_results.RData>
+library(leafviz)
+leafviz("<path/to/your_leafcutter_results.RData>")
 ```

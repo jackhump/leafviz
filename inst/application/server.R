@@ -1,92 +1,29 @@
-library(shiny)
-library(dplyr)
-library(ggplot2)
-library(DT)
-library(leafviz)
-library(reshape2)
-library(gridExtra)
-library(intervals) # needed for pretty strand arrow placement
-library(foreach)
-library(shinycssloaders)
-library(grid)
-library(gtable)
-library(ggrepel)
-#data.table is required
-# library(shinyjs)
-#### options for debugging
-#options(shiny.trace=TRUE)
-# options(shiny.reactlog=TRUE)
-#load("example/Brain_vs_Heart_results.Rdata")
-#source("../leafcutter/R/make_gene_plot.R")
-#make_gene_plot("MICAL3", counts = counts, introns = introns, exons_table = exons_table, cluster_list = clusters, clusterID = "clu_36585", introns_to_plot = introns_to_plot)
-#make_gene_plot("MICAL3",counts = counts, introns = introns, exons_table = exons_table, cluster_list = clusters, clusterID = NULL, introns_to_plot = introns_to_plot)
-#source("../leafcutter/R/make_cluster_plot.R")
-#make_cluster_plot( "clu_8845",main_title = c("RILP1", "clu_8845"), meta = meta, cluster_ids = cluster_ids, exons_table = exons_table, counts = counts,introns = introns)
-
-
-filter_intron_table <- function(introns, clu, toSave=FALSE){
-  d <- dplyr::filter(introns, clusterID == clu) %>%
-    dplyr::select( -clusterID, -gene, -ensemblID, -transcripts) %>%
-    arrange( desc(abs(deltapsi)))
-  if( !toSave ){
-    d <- rename(d, "ΔPSI" = deltapsi )
-  }else{
-    d <- rename(d, "dPSI" = deltapsi ) # fudge as grid arrange doesn't like greek letters
-  }
-  row.names(d) <- letters[1:nrow(d)] # letters is just a:z
-  return(d)
-}
-
-getGeneLength <- function(gene_name){
-  # gets length of gene in nucleotides and decides on a pixel length for the gene plot
-  # RBFOX1 is 1.7Mbp - scale to 5000px
-  # most genes are < 100kb
-  exons <- exons_table[ exons_table$gene_name == gene_name, ]
-  geneStart <- min(exons$start)
-  geneEnd <- max(exons$end)
-  geneLength <- geneEnd - geneStart
-  #print(geneLength)
-  if( geneLength >1E6){
-    pixels <- 5000 # scales RBFOX1 to 5000px
-  }
-  if( geneLength > 5e5 & geneLength < 1e6){
-    pixels <- 3000
-  }
-  if( geneLength > 1.5e5 & geneLength <= 5e5){
-    pixels <- 2000
-  }
-  if( geneLength <= 1.5e5){
-    pixels <- "auto"
-  }
-  #print(pixels)
-  return(pixels)
-}
-# test
-#getGeneLength("RBFOX1", 530)
-
-
-if (!exists("introns")){
-  load("example/Brain_vs_Heart_results.Rdata")
-  defaultValue <- 12 #RBFOX1
-  # for testing - simulate data aligned to genome without "chr" in chr name
-  #introns_to_plot$chr <- gsub("chr","", introns_to_plot$chr)
-  #row.names(counts) <- gsub("chr", "", row.names(counts))
-
-}else{
-  defaultValue <- NULL
-}
 
 #############
 # SHINY APP
 #############
 
+#' shiny server
+#'
+#' @param input
+#' @param output
+#' @param session
+#'
+#' @return
+#' @export
+#'
+#' @import shiny
+#' @examples
 server <- function(input, output, session) {
+
+  #load(infile)
+
   output$logo <- renderImage({
     list( src = leafcutter_logo, alt = "", width = "15%", height = "15%" )
   }, deleteFile = FALSE)
 
   output$all_clusters <- DT::renderDataTable({
-    datatable( clusters[,c("gene","coord","N","FDR","annotation")],
+    DT::datatable( clusters[,c("gene","coord","N","FDR","annotation")],
               escape = FALSE,
               rownames = FALSE,
               colnames = c('Genomic location'='coord','Gene'='gene','N'='N','Annotation'='annotation','q'='FDR'),
@@ -100,7 +37,7 @@ server <- function(input, output, session) {
               )
   })
   output$sample_table <- DT::renderDataTable({
-    datatable(sample_table,
+    DT::datatable(sample_table,
               escape = FALSE,
               rownames = FALSE,
               fillContainer = FALSE,
@@ -112,7 +49,7 @@ server <- function(input, output, session) {
   #   renderUI()
   # })
 
-  onclick("welcome", toggle(id = "popupInstruct", anim = TRUE) )
+  shinyjs::onclick("welcome", toggle(id = "popupInstruct", anim = TRUE) )
 
   observeEvent( input$aboutLink, {
     updateTabsetPanel(session, "navBarPage", selected = "About")
@@ -131,7 +68,7 @@ server <- function(input, output, session) {
     paste("Annotation source:", basename(annotation_code) )
   })
   output$cluster_summary <- DT::renderDataTable({
-    datatable(cluster_summary,
+    DT::datatable(cluster_summary,
               escape = FALSE,
               rownames = FALSE,
               fillContainer = FALSE,
@@ -140,7 +77,7 @@ server <- function(input, output, session) {
   })
 
   output$intron_summary <- DT::renderDataTable({
-    datatable(intron_summary,
+    DT::datatable(intron_summary,
               escape = FALSE,
               rownames = FALSE,
               fillContainer = FALSE,
@@ -154,7 +91,7 @@ server <- function(input, output, session) {
     clu <- mydata()$cluster
     if(!is.null(clu)){
       if(length(introns)){
-        datatable( filter_intron_table(introns, clu, toSave=FALSE),
+        DT::datatable( filter_intron_table(introns, clu, toSave=FALSE),
                  autoHideNavigation = TRUE, rownames = TRUE,
                  options <- list( searching = FALSE, paging = FALSE, info = FALSE)
           )
@@ -166,7 +103,7 @@ server <- function(input, output, session) {
   })
 
   # SET REACTIVE VALUE WITH A DEFAULT
-
+  defaultValue <- 1
   values <- reactiveValues(default = defaultValue) # RBFOX1 in the Brain vs Heart dataset
   # REACTIVE VALUE IS UPDATED BY INPUT
   observeEvent(input$all_clusters_rows_selected,{
@@ -181,7 +118,7 @@ server <- function(input, output, session) {
     sel <- values$default
     gene  <- clusters[ sel, ]$gene
     gene <- gsub("<.*?>", "", gene) # strip out html italic tags
-    width <- getGeneLength(gene)
+    width <- leafviz::getGeneLength(exons_table, gene)
     clusterID <- clusters[ sel, ]$clusterID
     coord <- clusters[ sel, ]$coord
     return(list(gene = gene, width = width, cluster = clusterID, coord = coord) )
@@ -230,7 +167,7 @@ server <- function(input, output, session) {
     filename = function() { paste0(mydata()$gene,"_", mydata()$cluster, '.pdf') },
     content = function(file) {
       plotTitle <- c(mydata()$gene, as.character(mydata()$cluster) )
-      ggsave(file,
+      ggplot2::ggsave(file,
              plot = make_cluster_plot( mydata()$cluster,
                                   main_title = plotTitle,
                                   meta = meta,
@@ -254,7 +191,7 @@ server <- function(input, output, session) {
                                         counts = counts,
                                         introns = introns)
       # make table theme
-      tableTheme <- ttheme_minimal(
+      tableTheme <- gridExtra::ttheme_minimal(
         core=list(bg_params = list(fill = c("whitesmoke","white"), col=NA)
         ),
         colhead=list(fg_params=list(col="black", fontface="bold"),
@@ -262,11 +199,11 @@ server <- function(input, output, session) {
         rowhead=list(fg_params=list(col="black"),
                      bg_params = list(fill=c("white", "whitesmoke"))))
 
-      mytable <- tableGrob(filter_intron_table(introns, mydata()$cluster, toSave=TRUE), theme = tableTheme )
+      mytable <- gridExtra::tableGrob(filter_intron_table(introns, mydata()$cluster, toSave=TRUE), theme = tableTheme )
       mycols <- ncol(mytable)
       mytable$widths <- unit( c( 1/(3*mycols), rep(1/mycols, mycols-1) ), "npc")
 
-      mytable <- gtable_add_grob(mytable,
+      mytable <- gtable::gtable_add_grob(mytable,
                            grobs = segmentsGrob( # line across the bottom
                              x0 = unit(0,"npc"),
                              y0 = unit(0,"npc"),
@@ -275,7 +212,7 @@ server <- function(input, output, session) {
                              gp = gpar(lwd = 2.0)),
                            t = 2, b = nrow(mytable), l = 1, r = mycols)
 
-      mytable <- gtable_add_grob(mytable,
+      mytable <- gtable::gtable_add_grob(mytable,
                                  grobs = segmentsGrob( # line across the bottom
                                    x0 = unit(0,"npc"),
                                    y0 = unit(0,"npc"),
@@ -284,7 +221,7 @@ server <- function(input, output, session) {
                                    gp = gpar(lwd = 2.0)),
                                  t = 1, b = 1, l = 1, r = mycols)
 
-      ggsave(file, plot = grid.arrange(clusterPlot, mytable, nrow =2),
+      ggplot2::ggsave(file, plot = grid.arrange(clusterPlot, mytable, nrow =2),
            device = "pdf", width = 10, height = 8 )
     }
   )
@@ -292,7 +229,7 @@ server <- function(input, output, session) {
   output$downloadGenePlot <- downloadHandler(
     filename = function() { paste( mydata()$gene,"_","allClusters", '.pdf', sep='') },
     content = function(file) {
-      ggsave(file,
+      ggplot2::ggsave(file,
              plot = make_gene_plot(mydata()$gene, counts = counts, introns = introns, exons_table = exons_table, cluster_list = clusters, clusterID = NULL, introns_to_plot = introns_to_plot),
              device = "pdf", width = ifelse( mydata()$width == "auto", yes = 10, no = mydata()$width / 100 ), height = 6, units = "in", limitsize = FALSE)
     }
@@ -354,34 +291,9 @@ server <- function(input, output, session) {
   })
 
 
-  createPCAPlot <- function(){
-    if( is.null(input$first_PC) ){
-      return(NULL)
-    }else{
-    first_PC <- input$first_PC
-    colour_choice <- input$colour_choice
-    shape_choice <- input$shape_choice
-    #print(first_PC)
-    second_PC <- names(pca[[1]])[ which( names(pca[[1]]) == first_PC) + 1 ]
-    xlab <- paste0( first_PC, " (", pca[[2]][ which(names(pca[[1]]) == first_PC  ) ], "%)"  )
-    ylab <- paste0( second_PC, " (", pca[[2]][ which(names(pca[[1]]) == first_PC ) + 1  ], "%)"  )
-
-    pca_plot <- ggplot( pca[[1]],
-                        aes_string(x = first_PC,
-                                  y = second_PC,
-                                  colour = colour_choice,
-                                  shape = shape_choice) ) + geom_point(size = 60 / nrow(pca[[1]])  ) +
-      xlab( xlab ) +
-      ylab( ylab ) +
-      theme_classic()
-
-    pca_plot
-    }
-  }
-
   output$pca_plot <- renderPlot({
     if( ! is.null( input$first_PC)){
-      createPCAPlot()
+      createPCAPlot(input)
     }
   }, width = "auto", height ="auto", res = 90)
 

@@ -21,3 +21,4 @@ Imports:
     shinycssloaders,
     grid,
     gtable
+RoxygenNote: 7.1.1
