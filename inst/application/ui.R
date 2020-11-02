@@ -136,7 +136,7 @@ ui <- function(){ tagList(
                "app presents and visualises the results of running",
                a(href="https://github.com/davidaknowles/leafcutter", "Leafcutter,", target = "_blank"),
                "a software package that quantifies RNA-seq splicing in an annotation-free way - ",
-               strong( a(href="http://www.biorxiv.org/content/early/2016/03/16/044107", "read the paper.", target = "_blank")),
+               strong( a(href="https://www.nature.com/articles/s41588-017-0004-9", "read the paper.", target = "_blank")),
                "Full documentation of the package is available", a(href="http://davidaknowles.github.io/leafcutter/", "here.", target = "_blank")
               ),
             h2( "Differential splicing events"),
@@ -196,7 +196,7 @@ ui <- function(){ tagList(
     position = "fixed-top",
     footer = div(id = "footer",
       p("written by Jack Humphrey, David Knowles & Yang Li.",
-        tags$a(href="https://github.com/davidaknowles/leafcutter/tree/master/leafviz", "Fork on GitHub.", target = "_blank")
+        tags$a(href="https://github.com/jackhump/leafviz", "Fork on GitHub.", target = "_blank")
     ),
       tags$head(tags$link(rel="shortcut icon", href="favicon.ico"))
     )

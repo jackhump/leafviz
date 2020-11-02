@@ -49,7 +49,7 @@ server <- function(input, output, session) {
   #   renderUI()
   # })
 
-  shinyjs::onclick("welcome", toggle(id = "popupInstruct", anim = TRUE) )
+  shinyjs::onclick("welcome", shinyjs::toggle(id = "popupInstruct", anim = TRUE) )
 
   observeEvent( input$aboutLink, {
     updateTabsetPanel(session, "navBarPage", selected = "About")

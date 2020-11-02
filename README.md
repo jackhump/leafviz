@@ -19,7 +19,6 @@ remotes::install_github("jackhump/leafviz")
 ## Running app on example dataset:
 
 ```
-in R:
 library(leafviz)
 leafviz()
 ```
