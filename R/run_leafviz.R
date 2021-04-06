@@ -16,7 +16,7 @@ leafviz <- function(infile = system.file("extdata/Brain_vs_Heart_results.Rdata",
   # if using Rstudio then getOption("browser") is a function for some reason
   if(!is.function(getOption("browser") ) ){
     # if using windows - default to firefox for now
-    if (getOption("browser") == ""){
+    if (is.null(getOption("browser") ) ){
         options(browser = "firefox")
     }
   }

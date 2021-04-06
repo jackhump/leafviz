@@ -20,5 +20,6 @@ Imports:
     foreach,
     shinycssloaders,
     grid,
-    gtable
+    gtable,
+    shinyjs
 RoxygenNote: 7.1.1

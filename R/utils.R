@@ -14,7 +14,7 @@ filter_intron_table <- function(introns, clu, toSave=FALSE){
     dplyr::select( -clusterID, -gene, -ensemblID, -transcripts) %>%
     arrange( desc(abs(deltapsi)))
   if( !toSave ){
-    d <- dplyr::rename(d, "ΔPSI" = deltapsi )
+    d <- dplyr::rename(d, "dPSI" = deltapsi )
   }else{
     d <- dplyr::rename(d, "dPSI" = deltapsi ) # fudge as grid arrange doesn't like greek letters
   }
