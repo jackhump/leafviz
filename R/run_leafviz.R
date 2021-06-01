@@ -33,7 +33,7 @@ leafviz <- function(infile = system.file("extdata/Brain_vs_Heart_results.Rdata",
 #' @export
 #'
 #' @examples
-make_leafviz_report <- function(
+make_report <- function(
   infile =  system.file("extdata/Brain_vs_Heart_results.Rdata", package = "leafviz"),
   outfile = file.path(getwd(), "report.html" ) ) {
 
@@ -60,4 +60,42 @@ make_leafviz_report <- function(
                                     title = "Cluster classification")
   )
   writeLines(report,con = outfile)
+}
+
+
+#' Write tables as TSV
+#'
+#' @param infile
+#' @param outfile
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' @importFrom magrittr "%>%"
+export_tables <- function(infile =  system.file("extdata/Brain_vs_Heart_results.Rdata", package = "leafviz"), outfolder = file.path(getwd(), "leafviz_tables" ) ){
+  if( !dir.exists(outfolder)){dir.create(outfolder)}
+
+  message(" * Loading data...")
+  load(infile, envir = .GlobalEnv)
+  message(" * Writing tables to ", outfolder)
+
+  # Clusters
+  # un-italicise gene name
+  cluster_df <- clusters %>% dplyr::mutate(gene = gsub("<i>|</i>", "", gene, fixed = FALSE))
+
+  cluster_out <- file.path(outfolder, paste0(code, "_sig_clusters.tsv") )
+
+  write.table(cluster_df, file = cluster_out, sep = "\t", quote = FALSE, row.names = FALSE)
+
+  # Introns
+  intron_df <- introns %>%
+    mutate(coord = paste0(chr, ":", start, "-", end)) %>%
+    mutate(ensemblID = gsub("_[0-9]$", "", ensemblID) ) %>%
+    select(clusterID, gene, ensemblID, coord, verdict, deltaPSI = deltapsi)
+
+  intron_out <- file.path(outfolder, paste0(code, "_sig_introns.tsv") )
+
+  write.table(intron_df, file = intron_out, sep = "\t", quote = FALSE, row.names = FALSE)
+
 }

@@ -55,5 +55,13 @@ Leafviz now allows you to export information to reports. Currently under develop
 make_leafviz_report(infile = "<path/to/your_leafcutter_results.RData>", outfile = "./report.html")
 ```
 
+### Exporting tables
+
+You can now export the clusters and introns tables to TSV with one command:
+
+```
+export_tables(infile = "<path/to/your_leafcutter_results.RData>", outfolder = ".")
+```
+
 
 
