@@ -46,3 +46,14 @@ This assumes you've prepared your differential splicing results for leafviz usin
 library(leafviz)
 leafviz("<path/to/your_leafcutter_results.RData>")
 ```
+
+### Generating simple reports
+
+Leafviz now allows you to export information to reports. Currently under development.
+
+```
+make_leafviz_report(infile = "<path/to/your_leafcutter_results.RData>", outfile = "./report.html")
+```
+
+
+
