@@ -35,18 +35,20 @@ leafviz <- function(infile = system.file("extdata/Brain_vs_Heart_results.Rdata",
 #' @examples
 make_report <- function(
   infile =  system.file("extdata/Brain_vs_Heart_results.Rdata", package = "leafviz"),
-  outfile = file.path(getwd(), "report.html" ) ) {
+  outfolder = file.path(getwd(), "leafviz_report")
+  ) {
+
+  if( !dir.exists(outfolder)){dir.create(outfolder)}
 
   if( !file.exists(infile)){
     stop(" * infile doesn't exist")
   }
 
-  if( !dir.exists(dirname(outfile))){
-    stop(" * path to outfile doesn't exist")
-  }
-
   message(" * Loading data...")
   load(infile, envir = .GlobalEnv)
+
+  outfile <- file.path(outfolder, paste0(code, "_report.html") )
+
   message(" * Writing report to ", outfile)
   # translate tables into HTML
   report <- c( paste("<h1>", code, "</h1>" ) ,
@@ -73,7 +75,9 @@ make_report <- function(
 #'
 #' @examples
 #' @importFrom magrittr "%>%"
-export_tables <- function(infile =  system.file("extdata/Brain_vs_Heart_results.Rdata", package = "leafviz"), outfolder = file.path(getwd(), "leafviz_tables" ) ){
+export_tables <- function(
+  infile =  system.file("extdata/Brain_vs_Heart_results.Rdata", package = "leafviz"),
+  outfolder = file.path(getwd(), "leafviz_tables" ) ){
   if( !dir.exists(outfolder)){dir.create(outfolder)}
 
   message(" * Loading data...")
