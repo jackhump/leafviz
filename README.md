@@ -16,6 +16,11 @@ install.packages("remotes")
 remotes::install_github("jackhump/leafviz")
 ``` 
 
+Docker image now available, created by @NaotoKubota 
+
+See https://hub.docker.com/r/naotokubota/leafviz
+
+
 ## Running the shiny app
 
 ### Setting the browser (for Windows only)
