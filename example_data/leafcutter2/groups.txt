@@ -1,0 +1,12 @@
+Brain-FrontalCortex_BA9.Sample1.chr10   Brain-FrontalCortex_BA9
+Brain-FrontalCortex_BA9.Sample2.chr10   Brain-FrontalCortex_BA9
+Brain-FrontalCortex_BA9.Sample3.chr10   Brain-FrontalCortex_BA9
+Brain-FrontalCortex_BA9.Sample4.chr10   Brain-FrontalCortex_BA9
+Brain-FrontalCortex_BA9.Sample5.chr10   Brain-FrontalCortex_BA9
+Brain-FrontalCortex_BA9.Sample6.chr10   Brain-FrontalCortex_BA9
+Cells-EBV-transformedlymphocytes.Sample1.chr10  Cells-EBV-transformedlymphocytes
+Cells-EBV-transformedlymphocytes.Sample2.chr10  Cells-EBV-transformedlymphocytes
+Cells-EBV-transformedlymphocytes.Sample3.chr10  Cells-EBV-transformedlymphocytes
+Cells-EBV-transformedlymphocytes.Sample4.chr10  Cells-EBV-transformedlymphocytes
+Cells-EBV-transformedlymphocytes.Sample5.chr10  Cells-EBV-transformedlymphocytes
+Cells-EBV-transformedlymphocytes.Sample6.chr10  Cells-EBV-transformedlymphocytes

@@ -1,7 +1,7 @@
 Package: leafviz
 Type: Package
 Title: A standalone version of the Leafcutter Shiny App
-Version: 0.1.0
+Version: 0.1.1
 Author: Jack Humphrey, David A. Knowles, Yang Li
 Maintainer: Jack Humphrey <jack.humphrey@mssm.edu>
 Description: see the Leafcutter package for details.
@@ -9,6 +9,10 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    R.utils,
+    data.table,
+    stringr,
+    optparse,
     stargazer,
     magrittr,
     ggrepel,
@@ -24,4 +28,4 @@ Imports:
     grid,
     gtable,
     shinyjs
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
