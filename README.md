@@ -2,6 +2,7 @@
 
 Jack Humphrey, David A. Knowles, Yang I. Li
 2017-2021
+Modified Scott I. Adamson 2026
 
 
 A lightweight, standalone version of the **Leafcutter Visualisation** Shiny app.
