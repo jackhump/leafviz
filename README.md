@@ -1,7 +1,9 @@
-# LeafViz 
+# LeafViz
 
 Jack Humphrey, David A. Knowles, Yang I. Li
 2017-2021
+
+Modified Scott I. Adamson 2026
 
 
 A lightweight, standalone version of the **Leafcutter Visualisation** Shiny app.
@@ -14,9 +16,9 @@ This was created due to the complexities of installing Leafcutter on local machi
 ## in R:
 install.packages("remotes")
 remotes::install_github("jackhump/leafviz")
-``` 
+```
 
-Docker image now available, created by @NaotoKubota 
+Docker image now available, created by @NaotoKubota
 
 See https://hub.docker.com/r/naotokubota/leafviz
 
@@ -41,16 +43,44 @@ options(browser="C:\Program Files\Google\Chrome\Application\chrome.exe")
 ```
 library(leafviz)
 leafviz()
+
 ```
 
 ### Running leafviz on your own dataset:
+#### Update as of version 0.1.1
+You can use new functions to prepare both the database from a gtf and the Rdata object from your leafcutter output.
 
-This assumes you've prepared your differential splicing results for leafviz using the prepare_results.R script within Leafcutter.
-
+To find example data, navigate to the example data directory and load up R.
+```
+cd example_data/leafcutter_ds
+R
+```
+Then build the annotation and Rdata object.
 ```
 library(leafviz)
+
+# Prepare annotation for leafviz
+gtf2leafcutter(
+    gtf_file      = "gencode.v43.basic.annotation_sample.gtf.gz",
+    output_prefix = "gencode.v43.basic_leafviz"
+)
+
+# Generate RData object for leafviz
+prepare_results(
+  counts_file               = "Geuvadis_M_vs_F_perind_numers.counts_sample.gz",
+  cluster_significance_file = "cluster_significance.txt",
+  effect_sizes_file         = "effect_sizes.txt",
+  annotation_code           = "gencode.v43.basic_leafviz",
+  groups_file               = "groups.txt",
+  output                    = "results.RData"
+)
+```
+Then you can load it into leafviz and it will launch:
+```
+library(leafviz) # if you haven't loaded it previously
 leafviz("<path/to/your_leafcutter_results.RData>")
 ```
+Note that this should be compatible with data generated from the R version, and the leafcutter-ds version generated for regular or leafcutter2 workflows.
 
 ### Generating simple reports
 

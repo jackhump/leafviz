@@ -140,16 +140,25 @@ multiqq=function(pvalues) {
 }
 
 #' Make a data.frame of meta data about the introns
-#' @param introns Names of the introns
-#' @return Data.frame with chr, start, end, cluster id and "middle"
+#' @param introns Names of the introns, with fields separated by ":".
+#'   Accepts either 4 fields (chr:start:end:clu) or 5 fields
+#'   (chr:start:end:clu:annotation).
+#' @return Data.frame with chr, start, end, clu, and "middle". If a 5th
+#'   field is present an "annotation" column is also included.
 #' @export
 get_intron_meta=function(introns){
   intron_meta=do.call(rbind,strsplit(introns,":"))
-  colnames(intron_meta)=c("chr","start","end","clu")
+  if (ncol(intron_meta) == 4) {
+    colnames(intron_meta)=c("chr","start","end","clu")
+  } else if (ncol(intron_meta) == 5) {
+    colnames(intron_meta)=c("chr","start","end","clu","annotation")
+  } else {
+    stop("get_intron_meta: unexpected number of fields (", ncol(intron_meta), ") after splitting on ':'")
+  }
   intron_meta=as.data.frame(intron_meta,stringsAsFactors = F)
   intron_meta$start=as.numeric(intron_meta$start)
   intron_meta$end=as.numeric(intron_meta$end)
-  intron_meta$middle=.5*(intron_meta$start+intron_meta$end) # TODO: can remove this now?
+  intron_meta$middle=.5*(intron_meta$start+intron_meta$end)
   intron_meta
 }
 
