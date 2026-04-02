@@ -55,14 +55,14 @@ To find example data, navigate to the example data directory and load up R.
 cd example_data/leafcutter_ds
 R
 ```
-Then build the annotation and Rdata object.
+Then build the annotation and Rdata object. Note that the output prefix must be in the format "<database>.<version>_hg38" for UCSC lookup to be functional.
 ```
 library(leafviz)
 
 # Prepare annotation for leafviz
 gtf2leafcutter(
     gtf_file      = "gencode.v43.basic.annotation_sample.gtf.gz",
-    output_prefix = "gencode.v43.basic_leafviz"
+    output_prefix = "gencode.v43.basic_hg38_leafviz"
 )
 
 # Generate RData object for leafviz
@@ -70,7 +70,7 @@ prepare_results(
   counts_file               = "Geuvadis_M_vs_F_perind_numers.counts_sample.gz",
   cluster_significance_file = "cluster_significance.txt",
   effect_sizes_file         = "effect_sizes.txt",
-  annotation_code           = "gencode.v43.basic_leafviz",
+  annotation_code           = "gencode.v43.basic_hg38_leafviz",
   groups_file               = "groups.txt",
   output                    = "results.RData"
 )
